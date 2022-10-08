@@ -87,6 +87,9 @@ class Application:
         evnt_emitter = EventEmitter()
         self.registry.register(evnt_emitter, app_entt)
 
+        time_comp = TimeComp()
+        self.registry.register(time_comp, app_entt)
+
         # initialize graphics context
         if self.window is None:
             self.window = impl_glfw_init(self.name, self.win_w, self.win_h)
@@ -114,7 +117,7 @@ class Application:
     def update(self) -> None:
         """
         """
-        app_entt = self.registry.view(AppTag)
+        app_entt = self.registry.view(AppTag)[-1]
         time_comp: TimeComp = self.registry.get(TimeComp, app_entt)
         time_comp.start = time.perf_counter()
 
@@ -144,7 +147,7 @@ class Application:
         """
         """
         for system in self.systems:
-            system.shutdown()
+            system.shutdown(self.registry)
         
         self.render_backend.shutdown()
         glfw.terminate()

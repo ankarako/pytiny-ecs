@@ -34,36 +34,37 @@ class Registry:
         self.mapping = { }
         self.id_counter = -1
     
-    def create(self) -> Entity:
+    def create(self) -> int:
         """
         Create an entity
         """
         self.id_counter += 1
         entt = Entity(self.id_counter)
         self.entts[entt.id] = { }
-        return self.entts[-1]
+        return entt.id
     
-    def register(self, comp: Component, entt: Entity) -> None:
+    def register(self, comp: Component, entt: int) -> None:
         """
         Associate a ``Component`` with an ``Entity``
 
         :param comp: The ``Component`` object to register.
         :param entt: The ``Entity`` object to associate with the component.
         """
-        assert entt.id >= 0 and entt.id < len(self.entt_map)
+        entt
+        assert entt >= 0 and entt < len(self.entts)
 
         if type(comp) not in self.comps:
             self.comps[type(comp)] = []
         
         comp_id = len(self.comps[type(comp)])
         self.comps[type(comp)].append(comp)
-        self.entts[entt.id][type(comp)] = comp_id
+        self.entts[entt][type(comp)] = comp_id
 
         if type(comp) not in self.mapping:
             self.mapping[type(comp)] = []
-        self.mapping[type(comp)].append(entt.id)
+        self.mapping[type(comp)].append(entt)
             
-    def view(self, comp_t: Component) -> List[Entity]:
+    def view(self, comp_t: Component) -> List[int]:
         """
         Get a view of the entities that are associated with
         the specified component type.
@@ -73,7 +74,7 @@ class Registry:
         entt_ids = self.mapping[comp_t]
         return entt_ids
     
-    def get(self, comp_t: Component, entt: Entity) -> Component:
+    def get(self, comp_t: Component, entt: int) -> Component:
         """
         Get the component of the specified type, that is associated
         with the specified ``Entity`` object.
@@ -82,9 +83,10 @@ class Registry:
         :param entt: The ``Entity`` object associated with the component.
         :return The specified ``Component`` object.
         """
-        assert comp_t in self.mapping, f"The specified component type is not registered"
-        assert entt.id in self.entts, f"The specified entity does not exist"
-        comp_idx = self.entts[entt.id][comp_t]
+        if comp_t not in self.mapping:
+            return None
+        assert entt in self.entts.keys(), f"The specified entity does not exist"
+        comp_idx = self.entts[entt][comp_t]
         return self.comps[comp_t][comp_idx]
 
 
