@@ -7,6 +7,7 @@ import imgui
 import glfw
 import OpenGL.GL as gl
 from imgui.integrations.glfw import GlfwRenderer
+from pyapp.comps.input_comp import InputComp
 
 import pyapp.ecs as ecs
 from pyapp.event import EventEmitter
@@ -38,7 +39,6 @@ def impl_glfw_init(win_name: str, w: int, h: int):
         glfw.terminate()
         raise RuntimeError("Failed to initialize a window.")
     return window
-
 
 
 class Application:
@@ -74,6 +74,12 @@ class Application:
         self.request_shutdown = False
         self.registry = None
     
+    def scroll_clbk(self, x: float, y: float) -> None:
+        app_entt = self.registry.view(AppTag)[-1]
+        input_comp: InputComp = self.registry.get(InputComp, app_entt)
+        input_comp.scroll_x = x
+        input_comp.scroll_y = y
+    
     def init(self) -> None:
         """
         Initialize the application
@@ -90,11 +96,15 @@ class Application:
         time_comp = TimeComp()
         self.registry.register(time_comp, app_entt)
 
+        input_comp = InputComp()
+        self.registry.register(input_comp, app_entt)
+
         # initialize graphics context
         if self.window is None:
             self.window = impl_glfw_init(self.name, self.win_w, self.win_h)
         
         # set glfw calbacks
+        glfw.set_scroll_callback(self.window, self.scroll_clbk)
 
         # create GUI context
         imgui.create_context()
